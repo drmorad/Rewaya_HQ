@@ -1,0 +1,6 @@
+{
+  "name": "Rewaya HQ",
+  "description": "Executive operations hub & hygiene audits for Rewaya Hotels",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
