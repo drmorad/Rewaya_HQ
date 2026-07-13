@@ -390,6 +390,8 @@ fun DashboardTabView(
     isArabic: Boolean,
     t: (String, String) -> String
 ) {
+    var showQuickAuditDialog by remember { mutableStateOf(false) }
+
     val filteredAudits = audits.filter { selectedHotelId == null || it.hotelId == selectedHotelId }
     val filteredActions = correctiveActions.filter { selectedHotelId == null || it.hotelId == selectedHotelId }
 
@@ -465,6 +467,343 @@ fun DashboardTabView(
                 )
             }
         }
+    }
+
+    // Prominent Quick Audit action button
+    Button(
+        onClick = { showQuickAuditDialog = true },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFF59E0B), // goldAccent
+            contentColor = Color(0xFF0F172A)    // slatePrimary
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+            .height(48.dp),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.FlashOn,
+            contentDescription = "Quick Audit Icon",
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = t("⚡ QUICK AUDIT", "⚡ تدقيق سريع"),
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 14.sp
+        )
+    }
+
+    // Quick Audit Dialog modal
+    if (showQuickAuditDialog) {
+        var selectedHotelIdQuick by remember { mutableStateOf(hotels.firstOrNull()?.id ?: "") }
+        var selectedDeptIndex by remember { mutableStateOf(0) }
+        val depts = listOf(
+            Pair("Food & Beverage", "الأغذية والمشروبات"),
+            Pair("Housekeeping", "الإشراف الداخلي"),
+            Pair("Back of House", "الخدمات المساندة"),
+            Pair("Public Areas", "المناطق العامة")
+        )
+
+        var isClean by remember { mutableStateOf(true) }
+        var areSuppliesStocked by remember { mutableStateOf(true) }
+        var areStaffCompliant by remember { mutableStateOf(true) }
+        var commentText by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showQuickAuditDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FlashOn,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B) // goldAccent
+                    )
+                    Text(
+                        text = t("Quick Hygiene Audit", "تدقيق صحي سريع"),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                }
+            },
+            containerColor = Color(0xFF1E293B), // slateSecondary
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 1. Hotel selection dropdown
+                    Column {
+                        Text(
+                            text = t("Select Hotel Property", "اختر فندق"),
+                            fontSize = 12.sp,
+                            color = Color.LightGray,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        var hotelDropdownExpanded by remember { mutableStateOf(false) }
+                        val currentSelectedHotel = hotels.find { it.id == selectedHotelIdQuick }
+                        val hotelName = if (isArabic) currentSelectedHotel?.nameAr ?: "" else currentSelectedHotel?.nameEn ?: ""
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF0F172A))
+                                .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                                .clickable { hotelDropdownExpanded = true }
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = hotelName, color = Color.White, fontSize = 13.sp)
+                                Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.White)
+                            }
+                            DropdownMenu(
+                                expanded = hotelDropdownExpanded,
+                                onDismissRequest = { hotelDropdownExpanded = false },
+                                modifier = Modifier.background(Color(0xFF0F172A))
+                            ) {
+                                hotels.forEach { hotel ->
+                                    DropdownMenuItem(
+                                        text = { Text(if (isArabic) hotel.nameAr else hotel.nameEn, color = Color.White) },
+                                        onClick = {
+                                            selectedHotelIdQuick = hotel.id
+                                            hotelDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Department selection dropdown
+                    Column {
+                        Text(
+                            text = t("Select Department", "اختر القسم"),
+                            fontSize = 12.sp,
+                            color = Color.LightGray,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        var deptDropdownExpanded by remember { mutableStateOf(false) }
+                        val deptName = if (isArabic) depts[selectedDeptIndex].second else depts[selectedDeptIndex].first
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF0F172A))
+                                .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                                .clickable { deptDropdownExpanded = true }
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = deptName, color = Color.White, fontSize = 13.sp)
+                                Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.White)
+                            }
+                            DropdownMenu(
+                                expanded = deptDropdownExpanded,
+                                onDismissRequest = { deptDropdownExpanded = false },
+                                modifier = Modifier.background(Color(0xFF0F172A))
+                            ) {
+                                depts.forEachIndexed { index, pair ->
+                                    DropdownMenuItem(
+                                        text = { Text(if (isArabic) pair.second else pair.first, color = Color.White) },
+                                        onClick = {
+                                            selectedDeptIndex = index
+                                            deptDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Divider(color = Color.Gray.copy(alpha = 0.3f))
+
+                    // 3. Question switches
+                    Text(
+                        text = t("Rapid Checklist", "قائمة التحقق السريعة"),
+                        fontSize = 12.sp,
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Q1
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = t("Area Clean & Dust-free", "المنطقة نظيفة وخالية من الغبار"),
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = t("No physical dirt or debris detected.", "لا يوجد غبار أو أوساخ مرئية."),
+                                color = Color.LightGray,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Switch(
+                            checked = isClean,
+                            onCheckedChange = { isClean = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF10B981),
+                                checkedTrackColor = Color(0xFF10B981).copy(alpha = 0.4f)
+                            )
+                        )
+                    }
+
+                    // Q2
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = t("Supplies & Sanitizers Stocked", "المستلزمات والمعقمات متوفرة"),
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = t("Soaps, tissues, sanitizer stations filled.", "الصابون والمناديل والمعقمات ممتلئة."),
+                                color = Color.LightGray,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Switch(
+                            checked = areSuppliesStocked,
+                            onCheckedChange = { areSuppliesStocked = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF10B981),
+                                checkedTrackColor = Color(0xFF10B981).copy(alpha = 0.4f)
+                            )
+                        )
+                    }
+
+                    // Q3
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = t("Staff Hygiene Compliant", "التزام الموظفين بالنظافة"),
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = t("Staff following handwash and uniform rules.", "التزام بقواعد غسيل الأيدي والزي الموحد."),
+                                color = Color.LightGray,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Switch(
+                            checked = areStaffCompliant,
+                            onCheckedChange = { areStaffCompliant = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF10B981),
+                                checkedTrackColor = Color(0xFF10B981).copy(alpha = 0.4f)
+                            )
+                        )
+                    }
+
+                    Divider(color = Color.Gray.copy(alpha = 0.3f))
+
+                    // 4. Comment Field
+                    OutlinedTextField(
+                        value = commentText,
+                        onValueChange = { commentText = it },
+                        label = { Text(t("Quick Notes / Comments", "ملاحظات سريعة / تعليقات"), color = Color.LightGray) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFF59E0B),
+                            unfocusedBorderColor = Color.Gray,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val selectedHotelIdQuickVal = selectedHotelIdQuick
+                        val selectedDeptVal = depts[selectedDeptIndex].first
+                        
+                        val q1 = TempAnswer(
+                            questionId = "quick_1",
+                            questionTextEn = "Area Clean & Dust-free",
+                            questionTextAr = "المنطقة نظيفة وخالية من الغبار",
+                            section = "General Cleanliness",
+                            responseType = "BINARY",
+                            binaryValue = isClean,
+                            comment = if (commentText.isNotBlank()) commentText else null
+                        )
+                        val q2 = TempAnswer(
+                            questionId = "quick_2",
+                            questionTextEn = "Supplies & Sanitizers Stocked",
+                            questionTextAr = "المستلزمات والمعقمات متوفرة",
+                            section = "Resources",
+                            responseType = "BINARY",
+                            binaryValue = areSuppliesStocked
+                        )
+                        val q3 = TempAnswer(
+                            questionId = "quick_3",
+                            questionTextEn = "Staff Hygiene Compliant",
+                            questionTextAr = "التزام الموظفين بالنظافة",
+                            section = "Protocols",
+                            responseType = "BINARY",
+                            binaryValue = areStaffCompliant
+                        )
+                        
+                        viewModel.submitInspection(
+                            hotelId = selectedHotelIdQuickVal,
+                            deptName = selectedDeptVal,
+                            answers = listOf(q1, q2, q3)
+                        )
+                        showQuickAuditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF59E0B),
+                        contentColor = Color(0xFF0F172A)
+                    )
+                ) {
+                    Text(t("Submit Audit", "تقديم التدقيق"), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showQuickAuditDialog = false }
+                ) {
+                    Text(t("Cancel", "إلغاء"), color = Color.White)
+                }
+            }
+        )
     }
 
     // Performance Calculations & KPIs
