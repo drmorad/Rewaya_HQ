@@ -98,17 +98,7 @@ class AuditRepository(
             roleCode = "QUALITY_MANAGER",
             assignedHotelId = "hotel_inn_id"
         )
-        val auditor = User(
-            id = "user_auditor_id",
-            email = "inspector.ali@rewayahotels.com",
-            titlePrefix = "Mr.",
-            firstName = "Ali",
-            lastName = "Farouk",
-            displayRole = "Senior Quality Auditor",
-            roleCode = "AUDITOR",
-            assignedHotelId = "hotel_majestic_id"
-        )
-        userDao.insertUsers(listOf(morad, hussien, sheriff, hassan, auditor))
+        userDao.insertUsers(listOf(morad, hussien, sheriff, hassan))
 
         // 3. Seed some initial historical audits for realistic dashboard UI
         val audit1Details = Audit(

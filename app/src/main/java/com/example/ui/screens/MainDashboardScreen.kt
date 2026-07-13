@@ -838,20 +838,18 @@ fun AuditTemplatesView(
 }
 
 // -------------------------------------------------------------
-// 3. SMART AUDIT FORM (INCORPORATING THE COMPLETE F&B DETAILED CHECKLIST)
+// 3. HYGIENE AUDIT INPUT FORM
 // -------------------------------------------------------------
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAuditFormView(
     formType: String,
     hotels: List<Hotel>,
     onCancel: () -> Unit,
-    onSubmit: (hotelId: String, deptName: String, answers: List<TempAnswer>) -> Unit,
+    onSubmit: (String, String, List<TempAnswer>) -> Unit,
     isArabic: Boolean,
     t: (String, String) -> String
 ) {
-    var selectedHotelId by remember { mutableStateOf("hotel_majestic_id") }
-    var deptName = when (formType) {
+    val deptName = when (formType) {
         "FB" -> "Food & Beverage"
         "HK" -> "Housekeeping"
         "BOH" -> "Back of House"
@@ -859,35 +857,69 @@ fun CreateAuditFormView(
         else -> "Administrative"
     }
 
+    var selectedHotelId by remember { mutableStateOf(hotels.firstOrNull()?.id ?: "") }
+
     // Load templates questions. If FB, we have the complete detailed F&B questions!
     val questionsEnAr = remember(formType) {
-        if (formType == "FB") {
-            listOf(
-                // Section 1
-                Quadruple("fb_1_1", "Food deliveries inspected for quality, temperature, and undamaged packaging upon arrival.", "فحص الشحنات الغذائية للتأكد من الجودة، ودرجة الحرارة، وسلامة العبوات عند الوصول.", "1. Receiving", "BINARY"),
-                Quadruple("fb_1_2", "Cold storage unit temperatures logged: Chilled food (0°C to +4°C), Frozen food (-18°C or lower).", "تسجيل درجات حرارة وحدات التخزين البارد: الأغذية المبردة (0 إلى 4 درجات مئوية)، المجمدة (-18 درجة مئوية أو أقل).", "1. Receiving", "BINARY"),
-                Quadruple("fb_1_3", "High-risk raw foods (poultry, seafood, meat) are segregated from cooked or ready-to-eat items.", "فصل الأطعمة النيئة عالية الخطورة (الدواجن، المأكولات البحرية، اللحوم) عن الأطعمة المطبوخة.", "1. Receiving", "BINARY"),
-                Quadruple("fb_1_4", "All storage items follow First-In, First-Out (FIFO) guidelines and show clear labels with prep & expiry dates.", "تتبع جميع المخزونات نظام الوارد أولاً يصرف أولاً وتظهر عليها ملصقات تاريخ التحضير والصلاحية.", "1. Receiving", "BINARY"),
-                // Section 2
-                Quadruple("fb_2_1", "Food prep surfaces, utensils, and cutting boards are clean, sanitized, and color-coded.", "أسطح تحضير الأغذية، الأدوات، وألواح التقطيع نظيفة ومعقمة ومصنفة بحسب الألوان.", "2. Kitchen Labs", "RATING"),
-                Quadruple("fb_2_2", "High-temperature dishwashing machines reach a minimum rinse temperature of 82°C.", "آلات غسيل الصحون ذات الحرارة العالية تصل لدرجة حرارة شطف دنيا تبلغ 82 درجة مئوية.", "2. Kitchen Labs", "BINARY"),
-                Quadruple("fb_2_3", "No signs of pest activity (insects, rodents) are present in prep, storage, or waste disposal areas.", "خلو مناطق التحضير، التخزين، والتخلص من النفايات من أي علامات لنشاط الآفات (الحشرات والقوارض).", "2. Kitchen Labs", "BINARY"),
-                Quadruple("fb_2_4", "Handwashing stations are fully accessible, clean, and stocked with warm water, liquid soap, and paper towels.", "محطات غسيل الأيدي سهلة الوصول ومجهزة بالكامل بالماء الدافئ والصابون السائل والمناشف الورقية.", "2. Kitchen Labs", "RATING"),
-                // Section 3
-                Quadruple("fb_3_1", "Food handlers are wearing clean, authorized uniforms, hairnets/beard snoods, and minimal jewelry.", "يرتدي متداولو الأغذية ملابس نظيفة ومعتمدة، غطاء الشعر/اللحية، مع الحد الأدنى من المجوهرات.", "3. Hygiene", "BINARY"),
-                Quadruple("fb_3_2", "Food handlers with visible cuts or wounds are wearing blue, waterproof dressings and food-grade gloves.", "العاملون الذين يعانون من جروح ظاهرة يرتدون ضمادات زرقاء مقاومة للماء وقفازات غذائية.", "3. Hygiene", "BINARY"),
-                Quadruple("fb_3_3", "Staff wash hands regularly at designated hand-wash stations (not in food-prep sinks).", "يقوم الموظفون بغسل أيديهم بانتظام في مغاسل مخصصة لذلك (وليس في أحواض تحضير الطعام).", "3. Hygiene", "BINARY"),
-                // Section 4
-                Quadruple("fb_4_1", "Hot buffet foods are held at or above 63°C; cold buffet foods are held at or below 4°C.", "حفظ أطعمة البوفيه الساخنة عند درجة حرارة 63 أو أعلى، والباردة عند 4 درجات أو أقل.", "4. Service Area", "BINARY"),
-                Quadruple("fb_4_2", "Dining area tables, chairs, and condiment holders are clean and sanitized between guest turns.", "طاولات صالة الطعام، الكراسي، وحوامل التوابل نظيفة ومعقمة بين فترات خدمة النزلاء.", "4. Service Area", "RATING"),
-                Quadruple("fb_4_3", "Guest-facing cutlery, glassware, and tableware are free of spots, cracks, or residues.", "أدوات المائدة، الأواني الزجاجية، والأطباق المخصصة للنزلاء خالية من البقع أو الشقوق أو البقايا.", "4. Service Area", "BINARY")
-            )
-        } else {
-            listOf(
-                Quadruple("gen_1", "General cleanliness, dust-free furniture, and sanitized layout observed in rooms/space.", "مستوى النظافة العام، الأثاث خالي من الغبار، والترتيب المعقم للمكان.", "Cleanliness", "BINARY"),
-                Quadruple("gen_2", "Emergency safety lighting, fire extinguishers, first aid kit check.", "التحقق من حالة إضاءة الطوارئ، أجهزة إطفاء الحريق، وصندوق الإسعافات الأولية.", "Safety & Security", "RATING"),
-                Quadruple("gen_3", "Mechanical ventilation system and normal temperature range.", "أنظمة التهوية الميكانيكية ونطاق درجات الحرارة الطبيعي.", "Equipment", "BINARY")
-            )
+        when (formType) {
+            "FB" -> {
+                listOf(
+                    // Section 1
+                    Quadruple("fb_1_1", "Food deliveries inspected for quality, temperature, and undamaged packaging upon arrival.", "فحص الشحنات الغذائية للتأكد من الجودة، ودرجة الحرارة، وسلامة العبوات عند الوصول.", "1. Receiving", "BINARY"),
+                    Quadruple("fb_1_2", "Cold storage unit temperatures logged: Chilled food (0°C to +4°C), Frozen food (-18°C or lower).", "تسجيل درجات حرارة وحدات التخزين البارد: الأغذية المبردة (0 إلى 4 درجات مئوية)، المجمدة (-18 درجة مئوية أو أقل).", "1. Receiving", "BINARY"),
+                    Quadruple("fb_1_3", "High-risk raw foods (poultry, seafood, meat) are segregated from cooked or ready-to-eat items.", "فصل الأطعمة النيئة عالية الخطورة (الدواجن، المأكولات البحرية، اللحوم) عن الأطعمة المطبوخة.", "1. Receiving", "BINARY"),
+                    Quadruple("fb_1_4", "All storage items follow First-In, First-Out (FIFO) guidelines and show clear labels with prep & expiry dates.", "تتبع جميع المخزونات نظام الوارد أولاً يصرف أولاً وتظهر عليها ملصقات تاريخ التحضير والصلاحية.", "1. Receiving", "BINARY"),
+                    // Section 2
+                    Quadruple("fb_2_1", "Food prep surfaces, utensils, and cutting boards are clean, sanitized, and color-coded.", "أسطح تحضير الأغذية، الأدوات، وألواح التقطيع نظيفة ومعقمة ومصنفة بحسب الألوان.", "2. Kitchen Labs", "RATING"),
+                    Quadruple("fb_2_2", "High-temperature dishwashing machines reach a minimum rinse temperature of 82°C.", "آلات غسيل الصحون ذات الحرارة العالية تصل لدرجة حرارة شطف دنيا تبلغ 82 درجة مئوية.", "2. Kitchen Labs", "BINARY"),
+                    Quadruple("fb_2_3", "No signs of pest activity (insects, rodents) are present in prep, storage, or waste disposal areas.", "خلو مناطق التحضير، التخزين، والتخلص من النفايات من أي علامات لنشاط الآفات (الحشرات والقوارض).", "2. Kitchen Labs", "BINARY"),
+                    Quadruple("fb_2_4", "Handwashing stations are fully accessible, clean, and stocked with warm water, liquid soap, and paper towels.", "محطات غسيل الأيدي سهلة الوصول ومجهزة بالكامل بالماء الدافئ والصابون السائل والمناشف الورقية.", "2. Kitchen Labs", "RATING"),
+                    // Section 3
+                    Quadruple("fb_3_1", "Food handlers are wearing clean, authorized uniforms, hairnets/beard snoods, and minimal jewelry.", "يرتدي متداولو الأغذية ملابس نظيفة ومعتمدة، غطاء الشعر/اللحية، مع الحد الأدنى من المجوهرات.", "3. Hygiene", "BINARY"),
+                    Quadruple("fb_3_2", "Food handlers with visible cuts or wounds are wearing blue, waterproof dressings and food-grade gloves.", "العاملون الذين يعانون من جروح ظاهرة يرتدون ضمادات زرقاء مقاومة للماء وقفازات غذائية.", "3. Hygiene", "BINARY"),
+                    Quadruple("fb_3_3", "Staff wash hands regularly at designated hand-wash stations (not in food-prep sinks).", "يقوم الموظفون بغسل أيديهم بانتظام في مغاسل مخصصة لذلك (وليس في أحواض تحضير الطعام).", "3. Hygiene", "BINARY"),
+                    // Section 4
+                    Quadruple("fb_4_1", "Hot buffet foods are held at or above 63°C; cold buffet foods are held at or below 4°C.", "حفظ أطعمة البوفيه الساخنة عند درجة حرارة 63 أو أعلى، والباردة عند 4 درجات أو أقل.", "4. Service Area", "BINARY"),
+                    Quadruple("fb_4_2", "Dining area tables, chairs, and condiment holders are clean and sanitized between guest turns.", "طاولات صالة الطعام، الكراسي، وحوامل التوابل نظيفة ومعقمة بين فترات خدمة النزلاء.", "4. Service Area", "RATING"),
+                    Quadruple("fb_4_3", "Guest-facing cutlery, glassware, and tableware are free of spots, cracks, or residues.", "أدوات المائدة، الأواني الزجاجية، والأطباق المخصصة للنزلاء خالية من البقع أو الشقوق أو البقايا.", "4. Service Area", "BINARY")
+                )
+            }
+            "HK" -> {
+                listOf(
+                    Quadruple("hk_1_1", "Guest room mattresses, bedsheets, and pillows are clean, stained-free, and vacuumed properly.", "مراتب غرف النزلاء والملايات والوسائد نظيفة وخالية من البقع ومكنوسة بشكل ممتاز.", "1. Guest Rooms", "RATING"),
+                    Quadruple("hk_1_2", "Room mini-bars and coffee stations are sanitized, restocked, and checked for expired items.", "بار الغرف الصغير ومحطة القهوة معقمة ومجهزة، والتحقق من تاريخ الصلاحية للمنتجات.", "1. Guest Rooms", "BINARY"),
+                    Quadruple("hk_2_1", "Guest bathrooms disinfected: shower screen, tub, toilet bowl, and sink are spotless.", "تطهير حمامات النزلاء: زجاج الاستحمام، الحوض، والمرحاض نظيفة تماماً ولا يوجد ترسبات.", "2. Bathrooms", "RATING"),
+                    Quadruple("hk_2_2", "Fresh towels, bathrobes, and luxury toiletries are stocked neatly without dust or hair.", "توفير مناشف نظيفة جديدة وأدوات النظافة الفاخرة مرتبة وخالية تماماً من الغبار والشعر.", "2. Bathrooms", "BINARY"),
+                    Quadruple("hk_3_1", "Corridors vacuumed, carpet edges clean, ceiling light fixtures free of dust and cobwebs.", "الممرات مكنوسة بالكامل، نظافة أطراف السجاد، خلو الإضاءة والأسقف من الغبار وخيوط العنكبوت.", "3. Public Hallways", "RATING"),
+                    Quadruple("hk_3_2", "Linen and housekeeping utility closets are locked, organized, and clean.", "مستودعات البياضات وغرف أدوات النظافة مغلقة، مرتبة، ونظيفة جداً.", "3. Public Hallways", "BINARY")
+                )
+            }
+            "BOH" -> {
+                listOf(
+                    Quadruple("boh_1_1", "Laundry washers, dryers, and irons are clean, lint filters cleared, and chemical pumps operating.", "غسالات ومجففات ومكاوي المغسلة نظيفة، فلاتر الوبر نظيفة، ومضخات الكيماويات تعمل بالكامل.", "1. Laundry Ops", "BINARY"),
+                    Quadruple("boh_1_2", "Soiled and clean linens are completely separated during transport, washing, and folding.", "البياضات المتسخة والنظيفة مفصولة بالكامل أثناء النقل والغسيل والطي لمنع التلوث.", "1. Laundry Ops", "BINARY"),
+                    Quadruple("boh_2_1", "Waste management area bins are covered, sanitized daily, and pest treatment schedules logged.", "صناديق إدارة النفايات مغلقة، يتم تعقيمها يومياً، وجداول مكافحة الحشرات مسجلة.", "2. Waste & Pest", "RATING"),
+                    Quadruple("boh_3_1", "HVAC filters clean, ventilation vents are dust-free, and water heater room dry and clean.", "فلاتر التكييف نظيفة، فتحات التهوية خالية من الغبار، وغرفة سخانات المياه جافة ونظيفة.", "3. Mechanical Zones", "BINARY")
+                )
+            }
+            "PA" -> {
+                listOf(
+                    Quadruple("pa_1_1", "Main lobby floor, carpets, and high-frequency touch doors/glass are clean and spotless.", "أرضيات الردهة الرئيسية، السجاد، والأبواب والزجاج الأكثر استخداماً نظيفة تماماً.", "1. Reception & Lobby", "RATING"),
+                    Quadruple("pa_1_2", "Lobby furniture, decorative pillows, and reception desks are clean, organized, and dust-free.", "أثاث الردهة والوسائد ومكتب الاستقبال نظيفة ومرتبة وخالية من أي غبار.", "1. Reception & Lobby", "BINARY"),
+                    Quadruple("pa_2_1", "Public elevators are clean, interior mirrors spotless, and buttons disinfected hourly.", "المصاعد العامة نظيفة، المرايا الداخلية خالية من البقع، ويتم تعقيم الأزرار والمقابض كل ساعة.", "2. Elevators & Stairs", "BINARY"),
+                    Quadruple("pa_3_1", "Swimming pool water clarity is optimal, and chemical parameters (pH/chlorine) logged hourly.", "نقاء مياه حمام السباحة مثالي، ويتم تدوين قراءات الكلور والحموضة كل ساعة بانتظام.", "3. Pools & Decks", "BINARY"),
+                    Quadruple("pa_3_2", "Pool sun loungers, showers, and public towels are sanitized, fresh, and neat.", "كراسي الاسترخاء، الاستحمام، والمناشف العامة معقمة، منعشة ومرتبة بالكامل.", "3. Pools & Decks", "RATING"),
+                    Quadruple("pa_4_1", "Public restrooms are smelling fresh, floors dry, soap dispensers filled, and paper hand towels stocked.", "دورات المياه العامة رائحتها طيبة، الأرضيات جافة، موزعات الصابون ممتلئة والمناشف الورقية متوفرة.", "4. Public Restrooms", "RATING")
+                )
+            }
+            else -> {
+                listOf(
+                    Quadruple("admin_1_1", "Reception counters, payment terminals, and keyboards are cleaned and disinfected regularly.", "كاونتر الاستقبال، أجهزة الدفع، ولوحات المفاتيح نظيفة ومطهرة بشكل دوري.", "1. Front Desks", "BINARY"),
+                    Quadruple("admin_2_1", "Archive cupboards and guest logs are stored securely, confidential paperwork locked.", "خزائن الأرشيف وسجلات النزلاء مخزنة بشكل آمن، والأوراق السرية مقفلة.", "2. Office Security", "BINARY"),
+                    Quadruple("admin_3_1", "Staff dining room, tea kitchen, microwave, and coffee maker are clean, tidy, and sanitized.", "غرفة طعام الموظفين، مطبخ الشاي، المايكروويف، وآلة القهوة نظيفة، مرتبة، ومعقمة.", "3. Employee Spaces", "RATING"),
+                    Quadruple("admin_3_2", "Staff locker rooms and toilets are clean, smelling fresh, and stocked with hand sanitizers.", "خزانات الموظفين ودورات المياه الخاصة بهم نظيفة، رائحتها منعشة، ومجهزة بمعقمات الأيدي.", "3. Employee Spaces", "BINARY")
+                )
+            }
         }
     }
 
@@ -1864,7 +1896,6 @@ fun LeaderboardTabView(
 
     val standings = listOf(
         Pair("Dr. Mohamed Hussien", 480),
-        Pair("Inspector Ali Farouk", 420),
         Pair("Dr. Morad", 410),
         Pair("Dr. Ahmed Sheriff", 350),
         Pair("Mr. Mohamed Hassan", 200)
