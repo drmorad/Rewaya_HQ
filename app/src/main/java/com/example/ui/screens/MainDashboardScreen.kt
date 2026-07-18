@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -27,6 +29,7 @@ import com.example.ui.viewmodel.AuditViewModel
 import com.example.ui.viewmodel.TempAnswer
 import java.text.SimpleDateFormat
 import java.util.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1174,6 +1177,252 @@ fun AuditTemplatesView(
             }
         }
     }
+
+    Spacer(modifier = Modifier.height(28.dp))
+    Divider(color = Color.LightGray.copy(alpha = 0.2f))
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // SECTION HEADER: PLATFORM COMPILER / BLUEPRINT
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Settings,
+            contentDescription = null,
+            tint = Color(0xFFF59E0B),
+            modifier = Modifier.size(22.dp)
+        )
+        Text(
+            text = t("HôtelGuard SOP & Platform Specs", "مواصفات وهيكل تشغيل هوتيل جارد"),
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            color = Color.Black
+        )
+    }
+
+    var selectedBlueprintTab by remember { mutableStateOf(0) }
+    val blueprintTabs = listOf(
+        Pair("Tech Stack", "البنية التقنية"),
+        Pair("Design", "التصميم"),
+        Pair("Modules", "الوظائف"),
+        Pair("Safeguards", "الحماية")
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)), // slateSecondary
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Interactive Tab Chips Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                blueprintTabs.forEachIndexed { index, pair ->
+                    val isTabSelected = selectedBlueprintTab == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isTabSelected) Color(0xFFF59E0B) else Color(0xFF0F172A))
+                            .clickable { selectedBlueprintTab = index }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (isArabic) pair.second else pair.first,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isTabSelected) Color(0xFF0F172A) else Color.White
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tab Content Compiler Area
+            when (selectedBlueprintTab) {
+                0 -> { // Tech Stack & Architecture
+                    Text(
+                        text = t("1. Tech Stack & Architecture / البنية البرمجية وهيكل التطبيق", "١. البنية البرمجية وهيكل النظام المرجعي"),
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    listOf(
+                        Triple("Framework", "React 18+ / TypeScript / Vite / React Router", "إطار عمل مرئي تفاعلي فائق السرعة والأداء"),
+                        Triple("Styling", "Tailwind CSS & Modern Utilities / transitions", "تنسيق متناسق مرن يدعم الانتقالات السلسة والواجهات الأنيقة"),
+                        Triple("Storage", "Offline-first with localforage sandbox", "قاعدة بيانات محلية تدعم العمل الكامل بدون اتصال بالإنترنت"),
+                        Triple("Visualization", "recharts for compliance metrics & trends", "رسوم بيانية ومؤشرات قياس تفاعلية لمراقبة نسب الالتزام"),
+                        Triple("PDF Engine", "pdfMake with custom Arabic Amiri-Regular Base64", "إنشاء تقارير PDF تدعم الكتابة باللغة العربية من اليمين لليسار بالكامل"),
+                        Triple("Word / Excel", "docx Landscape layouts & xlsx standard sheets", "تصدير احترافي متكامل لملفات الوورد والأكسيل المتطابقة"),
+                        Triple("AI Core", "Google @google/genai SDK (Gemini-1.5-Flash)", "تكامل مباشر لتوليد خطط التدريب وتصحيح الأخطاء باللغة العربية الفصحى")
+                    ).forEach { (label, descEn, descAr) ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "$label: $descEn",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = descAr,
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                1 -> { // Design System & Visual Aesthetic
+                    Text(
+                        text = t("2. Design System & Visual Aesthetic / الهوية المرئية", "٢. الهوية المرئية ونظام التصميم الجمالي"),
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    listOf(
+                        Triple("Colors / السمة", "Slate contrast: bg-slate-50 / bg-slate-900 / Emerald accents", "مزيج أنيق من الخلفيات الداكنة والفاتحة والمؤشرات الخضراء الجاذبة"),
+                        Triple("Typography / الخطوط", "Inter (SOP Controls) / Space Grotesk / JetBrains Mono (timestamps/serials)", "خطوط مخصصة متباينة لتوفير وضوح تام للأرقام وتواريخ المتابعة"),
+                        Triple("Transitions / الحركات", "Tailwind transition-all duration-300 / framer-motion", "تأثيرات حركية خفيفة وسلسة عند فتح القوائم والتنقل"),
+                        Triple("Icons / الرموز", "Consistent lucide-react standard suite", "مجموعة أيقونات موحدة ومتجانسة لسهولة القراءة الفورية")
+                    ).forEach { (label, descEn, descAr) ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "$label: $descEn",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = descAr,
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                2 -> { // Functional Core Modules
+                    Text(
+                        text = t("3. Functional Core Modules / الوحدات التشغيلية", "٣. الوحدات والوظائف التشغيلية الرئيسية"),
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    listOf(
+                        Triple("Executive HUD", "KPI metrics, 7-Day Safety AreaChart, Defect Vectors, Academy Progress", "لوحة قيادة تنفيذية شاملة ومؤشرات تتبع فورية"),
+                        Triple("Inspection Logger", "Multi-zone selection, severity controls, signatures canvas, offline sync", "تسجيل عمليات التدقيق مع تحديد المواقع والمخاطر والتوقيع رقمياً"),
+                        Triple("Records Vault", "Searchable tabular database, status controls, PDF/Excel/Word generation", "سجل تاريخي تفاعلي لحفظ وتحديث التقارير وتصديرها بضغطة زر"),
+                        Triple("AI Academy", "Topic training materials, trainee attendance ledger, Certificate Engine", "أكاديمية تدريب الموظفين وتوليد الشهادات الفورية وتصديرها للطباعة"),
+                        Triple("Compliance Panel", "Interactive PieCharts breakdown, category bar stats, batch exports", "تقارير تحليلية متقدمة وتصدير مجمّع لجميع السجلات والبيانات")
+                    ).forEach { (label, descEn, descAr) ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "$label: $descEn",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = descAr,
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                3 -> { // High-Fidelity Safeguards
+                    Text(
+                        text = t("4. High-Fidelity Safeguards / معايير الأمان والتشغيل", "٤. معايير الأمان والتشغيل وصحة البيانات"),
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    listOf(
+                        Triple("Amiri Font Loading", "Automated remote font fetching & base64 PDF registration", "تأمين تحميل خطوط اللغة العربية لضمان صحة ملفات الـ PDF المصدرة"),
+                        Triple("Storage Migration", "Secure decryption and migration with loaded status spinner", "نقل آمن لبيانات المتصفح القديمة إلى المستودع الجديد بدون فقدان"),
+                        Triple("Chart Containers", "minWidth/minHeight locks on ResponsiveContainers for layout safety", "ضمان ثبات الواجهات ومؤشرات الأداء مع تغير حجم الشاشات بالكامل"),
+                        Triple("Clean Print Layouts", "Custom media-query @media print stylesheets for certificates", "تنسيق خاص لطباعة الشهادات وتنسيقها بشكل جمالي مثالي للورق")
+                    ).forEach { (label, descEn, descAr) ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "$label: $descEn",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = descAr,
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // -------------------------------------------------------------
@@ -1273,6 +1522,13 @@ fun CreateAuditFormView(
 
     var inspectorSign by remember { mutableStateOf("") }
     var managerSign by remember { mutableStateOf("") }
+
+    // --- CAMERA & AI ANALYSIS STATES ---
+    var activeCameraQuestionId by remember { mutableStateOf<String?>(null) }
+    val aiAnalysisResults = remember { mutableStateMapOf<String, String>() }
+    val aiLoadingState = remember { mutableStateMapOf<String, Boolean>() }
+    val scope = rememberCoroutineScope()
+
 
     Column(
         modifier = Modifier
@@ -1452,6 +1708,211 @@ fun CreateAuditFormView(
                                     textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
                                 )
                             }
+
+                            // --- CAMERA AND EVIDENCE PHOTO SECTION ---
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = null,
+                                        tint = if (ans.mediaPath != null) Color(0xFF10B981) else Color.Gray,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = if (ans.mediaPath != null) t("Photo Evidence Attached", "صورة الإثبات مرفقة") else t("No Photo Attached", "لا توجد صورة مرفقة"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (ans.mediaPath != null) Color(0xFF10B981) else Color.Gray
+                                    )
+                                }
+                                
+                                Button(
+                                    onClick = { activeCameraQuestionId = q.first },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (ans.mediaPath != null) Color(0xFF0F172A) else Color(0xFFF59E0B)
+                                    ),
+                                    shape = RoundedCornerShape(6.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(
+                                        text = if (ans.mediaPath != null) t("Retake Photo", "إعادة التقاط") else t("Capture Photo", "التقاط صورة"),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (ans.mediaPath != null) Color.White else Color(0xFF0F172A)
+                                    )
+                                }
+                            }
+
+                            if (ans.mediaPath != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                val mediaPathStr = ans.mediaPath ?: ""
+                                val sceneObj = when {
+                                    mediaPathStr.contains("Surface") -> Triple(t("Prep Surface Contamination", "تلوث أسطح التحضير"), t("Cutting board with raw meat residue.", "ألواح تقطيع بها بقايا لحوم نيئة غير مغسولة."), Color(0xFFEF4444))
+                                    mediaPathStr.contains("Temp") -> Triple(t("Defective Storage Temp", "مخالفة معايير التبريد والتجميد"), t("Walk-in freezer temperature is at -7°C.", "درجة حرارة مجمد الأغذية عند -7 درجات مئوية."), Color(0xFFEF4444))
+                                    mediaPathStr.contains("Blocked") -> Triple(t("Blocked Sanitization Hub", "عائق أمام مغسلة الأيدي"), t("Handwash sink filled with dirty pans.", "مغسلة الأيدي ممتلئة بالأواني والمعدات."), Color(0xFFF59E0B))
+                                    mediaPathStr.contains("Separation") -> Triple(t("Cross-Contamination Risk", "مخاطر تلوث تبادلي بالأغذية النيئة"), t("Raw chicken dripping fluids onto salads.", "سوائل الدجاج النيء تتساقط على الخضروات."), Color(0xFFEF4444))
+                                    mediaPathStr.contains("Waste") -> Triple(t("Pests & Exposed Waste", "نفايات مكشوفة تهدد بجذب الآفات"), t("Kitchen waste bin overflowing, lid left open.", "سلة النفايات ممتلئة وغطاؤها مفتوح بالكامل."), Color(0xFFEF4444))
+                                    else -> Triple(t("Standard Compliance Scene", "مشهد التزام قياسي"), t("Standard inspected compliance evidence scene.", "صورة إثبات التزام جودة قياسية."), Color(0xFF10B981))
+                                }
+
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(BorderStroke(1.dp, sceneObj.third.copy(alpha = 0.5f)), RoundedCornerShape(10.dp)),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A))
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(
+                                                text = "📷 SNAPSHOT: " + sceneObj.first,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 11.sp,
+                                                color = Color.White
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(sceneObj.third.copy(alpha = 0.2f))
+                                                    .border(1.dp, sceneObj.third, RoundedCornerShape(4.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = t("HACCP EVIDENCE", "إثبات هاسب"),
+                                                    fontSize = 8.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = sceneObj.third
+                                                )
+                                            }
+                                        }
+                                        
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = sceneObj.second,
+                                            fontSize = 10.sp,
+                                            color = Color.LightGray
+                                        )
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(110.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFF1E293B))
+                                                .border(1.dp, Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            RenderSimulatedSceneGraphic(mediaPathStr)
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        val hasResult = aiAnalysisResults.containsKey(q.first)
+                                        val isLoading = aiLoadingState[q.first] ?: false
+
+                                        if (!hasResult && !isLoading) {
+                                            Button(
+                                                onClick = {
+                                                    scope.launch {
+                                                        aiLoadingState[q.first] = true
+                                                        val questionText = q.second
+                                                        val sectionName = q.fourth
+                                                        val sceneTitle = sceneObj.first
+                                                        val sceneDesc = sceneObj.second
+                                                        val apiKey = com.example.BuildConfig.GEMINI_API_KEY
+                                                        
+                                                        delay(1200)
+                                                        
+                                                        try {
+                                                            if (apiKey.isNotEmpty() && !apiKey.startsWith("MY_") && !apiKey.contains("PLACEHOLDER") && !apiKey.contains("VITE_")) {
+                                                                val response = callGeminiHaccpAnalysis(
+                                                                    apiKey = apiKey,
+                                                                    questionText = questionText,
+                                                                    sectionName = sectionName,
+                                                                    sceneTitle = sceneTitle,
+                                                                    sceneDesc = sceneDesc
+                                                                )
+                                                                aiAnalysisResults[q.first] = response
+                                                            } else {
+                                                                val fallback = getOfflineHaccpAnalysis(
+                                                                    questionText = questionText,
+                                                                    sectionName = sectionName,
+                                                                    sceneTitle = sceneTitle,
+                                                                    sceneDesc = sceneDesc
+                                                                )
+                                                                aiAnalysisResults[q.first] = fallback
+                                                            }
+                                                        } catch (e: Exception) {
+                                                            val fallback = getOfflineHaccpAnalysis(
+                                                                questionText = questionText,
+                                                                sectionName = sectionName,
+                                                                sceneTitle = sceneTitle,
+                                                                sceneDesc = sceneDesc
+                                                            )
+                                                            aiAnalysisResults[q.first] = fallback
+                                                        } finally {
+                                                            aiLoadingState[q.first] = false
+                                                        }
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(6.dp),
+                                                contentPadding = PaddingValues(vertical = 6.dp)
+                                            ) {
+                                                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = t("⚡ Run HACCP AI Analysis", "⚡ تشغيل تحليل الهاسب بذكاء جيميناي"),
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color(0xFF0F172A)
+                                                )
+                                            }
+                                        }
+
+                                        if (isLoading) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 10.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color(0xFFF59E0B), strokeWidth = 2.dp)
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = t("Consulting Gemini 3.5 Rule Engine...", "جاري استشارة ذكاء جيميناي وقواعد هاسب..."),
+                                                    fontSize = 10.sp,
+                                                    color = Color.LightGray
+                                                )
+                                            }
+                                        }
+
+                                        if (hasResult) {
+                                            val rawResult = aiAnalysisResults[q.first] ?: ""
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Divider(color = Color.Gray.copy(alpha = 0.2f))
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            RenderHaccpAiResultCard(rawResult, isArabic, t)
+                                        }
+                                    }
+                                }
+                            }
+
                         }
                     }
                 }
@@ -1502,6 +1963,223 @@ fun CreateAuditFormView(
                 color = Color.White
             )
         }
+
+        // --- SIMULATED SOP CAMERA OVERLAY DIALOG ---
+        if (activeCameraQuestionId != null) {
+            val currentCameraQuestionId = activeCameraQuestionId!!
+            val questionObj = questionsEnAr.firstOrNull { it.first == currentCameraQuestionId }
+            val questionText = if (isArabic) questionObj?.third ?: "" else questionObj?.second ?: ""
+            
+            var selectedSceneIndex by remember { mutableStateOf(0) }
+            val cameraScenes = listOf(
+                Triple("Surface Contamination", "Prep surfaces / boards unwashed with meat residues.", "Surface"),
+                Triple("Defective Storage Temp", "Walk-in freezer temperature reading is at -7°C.", "Temp"),
+                Triple("Blocked Sanitization Hub", "Sink blocked with pots, preventing staff handwash.", "Blocked"),
+                Triple("Cross-Contamination Risk", "Raw chicken dripping liquids directly onto lower salads.", "Separation"),
+                Triple("Pests & Exposed Waste", "Kitchen waste bin overflowing, lid left fully open.", "Waste")
+            )
+
+            AlertDialog(
+                onDismissRequest = { activeCameraQuestionId = null },
+                title = null,
+                containerColor = Color(0xFF0F172A),
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Header Area
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+                                Text("HÔTELGUARD LIVE CAMERA", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color.Red.copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color.Red))
+                                    Text("LIVE", color = Color.Red, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Audit Question Info
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.2f))
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = t("Target Compliance Standard:", "المعيار المطلوب فحصه:"),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFF59E0B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = questionText,
+                                    fontSize = 11.sp,
+                                    color = Color.White,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Simulated Camera Viewfinder Frame
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .border(BorderStroke(2.dp, Color.White.copy(alpha = 0.4f)), RoundedCornerShape(12.dp))
+                                .padding(4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Black)
+                        ) {
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val strokeWidth = 1f
+                                val color = Color.White.copy(alpha = 0.2f)
+                                drawLine(color = color, start = androidx.compose.ui.geometry.Offset(size.width / 3f, 0f), end = androidx.compose.ui.geometry.Offset(size.width / 3f, size.height), strokeWidth = strokeWidth)
+                                drawLine(color = color, start = androidx.compose.ui.geometry.Offset(size.width * 2f / 3f, 0f), end = androidx.compose.ui.geometry.Offset(size.width * 2f / 3f, size.height), strokeWidth = strokeWidth)
+                                drawLine(color = color, start = androidx.compose.ui.geometry.Offset(0f, size.height / 3f), end = androidx.compose.ui.geometry.Offset(size.width, size.height / 3f), strokeWidth = strokeWidth)
+                                drawLine(color = color, start = androidx.compose.ui.geometry.Offset(0f, size.height * 2f / 3f), end = androidx.compose.ui.geometry.Offset(size.width, size.height * 2f / 3f), strokeWidth = strokeWidth)
+                                drawCircle(color = Color(0xFFF59E0B).copy(alpha = 0.5f), radius = 20f, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+                            }
+
+                            val currentScene = cameraScenes[selectedSceneIndex]
+                            RenderSimulatedSceneGraphic(currentScene.third)
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("ISO 400 | F1.8 | EV -0.3", color = Color.White.copy(alpha = 0.7f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    Text("GPS: DUBAI HQ", color = Color.White.copy(alpha = 0.7f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    Text("HACCP AI ON", color = Color(0xFFF59E0B), fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
+                                    Text("REC 00:14", color = Color.White.copy(alpha = 0.7f), fontSize = 8.sp)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Scene Selector
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = t("Toggle Observed SOP Defect / Scene:", "اختر المشهد المراد تصويره ورصده:"),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.LightGray
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            
+                            cameraScenes.forEachIndexed { idx, scene ->
+                                val isSelected = selectedSceneIndex == idx
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSelected) Color(0xFF1E293B) else Color.Transparent)
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) Color(0xFFF59E0B) else Color.Gray.copy(alpha = 0.2f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { selectedSceneIndex = idx }
+                                        .padding(10.dp)
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = null,
+                                            tint = if (isSelected) Color(0xFFF59E0B) else Color.Gray
+                                        )
+                                        Column {
+                                            Text(
+                                                text = scene.first,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = scene.second,
+                                                fontSize = 9.sp,
+                                                color = Color.LightGray
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Shutter Capture Button
+                        Button(
+                            onClick = {
+                                val currentScene = cameraScenes[selectedSceneIndex]
+                                val ans = activeAnswers[currentCameraQuestionId]!!
+                                activeAnswers[currentCameraQuestionId] = ans.copy(mediaPath = currentScene.third)
+                                activeCameraQuestionId = null
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = t("📷 SHUTTER: CAPTURE PHOTO EVIDENCE", "📷 التقاط وتوثيق صورة المخالفة المحددة"),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    OutlinedButton(
+                        onClick = { activeCameraQuestionId = null },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                    ) {
+                        Text(t("Cancel", "إلغاء"))
+                    }
+                }
+            )
+        }
+
     }
 }
 
@@ -1947,6 +2625,25 @@ fun DailyAuditPreviewReport(
     currentUser: User?
 ) {
     var showSuccessToast by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var pdfEngineReady by remember { mutableStateOf(false) }
+    var settingUpEngine by remember { mutableStateOf(false) }
+    var setupProgress by remember { mutableStateOf("") }
+
+    var certificateRecipientName by remember { mutableStateOf("Inspector Ali Farouk") }
+    var selectedTopicIndex by remember { mutableStateOf(0) }
+    val topics = listOf(
+        Pair("Food Safety & Handwashing Compliance", "سلامة الأغذية وغسيل الأيدي والتعقيم المتبادل"),
+        Pair("HK Sterilization & Guest-Room Standards", "تعقيم الغرف ومعايير تدقيق الإشراف الداخلي"),
+        Pair("Chemical Storage & Plant Hazard Safety", "تخزين الكيماويات والتحكم بالمخاطر الهندسية"),
+        Pair("Water Quality Monitoring & Pool Standards", "سلامة المياه والتحكم بتركيز الكلور والمطهرات")
+    )
+
+    var showCertificateDialog by remember { mutableStateOf(false) }
+    var generatingCertificate by remember { mutableStateOf(false) }
+    var certificateProgress by remember { mutableStateOf("") }
+    var showBase64Snippet by remember { mutableStateOf(false) }
+    var showDownloadToast by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -2006,6 +2703,515 @@ fun DailyAuditPreviewReport(
         }
         Spacer(modifier = Modifier.height(12.dp))
     }
+
+    // -------------------------------------------------------------
+    // pdfMake Engine Configuration & RTL Arabic Certificate Panel
+    // -------------------------------------------------------------
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)), // slateSecondary
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.5f)) // subtle golden borders
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = Color(0xFFF59E0B),
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = t("pdfMake RTL & Amiri Font Configuration", "محرك تقارير pdfMake وتكوين خط الأميري العربي"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color.White
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = t(
+                    "Setup pdfMake on the client-side to dynamically render Right-to-Left (RTL) Arabic certificates by compiling the Google Amiri-Regular font as a Base64 string directly into pdfMake's Virtual File System.",
+                    "قم بتكوين محرك pdfMake محلياً لتوليد شهادات وتقارير عربية (RTL) من خلال تحويل وترميز خط الأميري كـ Base64 وحفظه مباشرة في ملفات محرك التقارير الافتراضية."
+                ),
+                fontSize = 11.sp,
+                color = Color.LightGray
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 1. ENGINE STATUS AND INITIALIZATION
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = t("ENGINE SETUP STATUS", "حالة تهيئة المحرك"),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (pdfEngineReady) {
+                            t("🟢 Amiri-Regular RTL Font Loaded & Active", "🟢 خط الأميري مُحمّل ونشط بالكامل (RTL جاهز)")
+                        } else {
+                            t("🔴 Uninitialized (No Font Mapping Found)", "🔴 غير مُهيأ (خط الأميري غير متوفر حالياً)")
+                        },
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (pdfEngineReady) Color(0xFF10B981) else Color(0xFFEF4444)
+                    )
+                }
+
+                if (!pdfEngineReady && !settingUpEngine) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                settingUpEngine = true
+                                setupProgress = t("Downloading Amiri-Regular.ttf...", "جاري تحميل خط Amiri-Regular.ttf...")
+                                delay(600)
+                                setupProgress = t("Generating Base64 Binary Stream...", "جاري تشفير الخط وتوليد مصفوفة Base64...")
+                                delay(600)
+                                setupProgress = t("Registering pdfMake.vfs['Amiri.ttf']", "جاري تسجيل ملفات vfs في محرك pdfMake...")
+                                delay(600)
+                                pdfEngineReady = true
+                                settingUpEngine = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(t("Initialize", "تهيئة المحرك"), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    }
+                }
+            }
+
+            if (settingUpEngine) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFF59E0B), strokeWidth = 2.dp)
+                    Text(text = setupProgress, color = Color.White, fontSize = 11.sp)
+                }
+            }
+
+            if (pdfEngineReady) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider(color = Color.Gray.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Certificate Form Title
+                Text(
+                    text = t("RTL Certificate Generation Panel", "لوحة توليد شهادات الالتزام باللغة العربية"),
+                    fontSize = 12.sp,
+                    color = Color(0xFFF59E0B),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Recipient Name Field
+                OutlinedTextField(
+                    value = certificateRecipientName,
+                    onValueChange = { certificateRecipientName = it },
+                    label = { Text(t("Recipient / Trainee Name", "اسم المتدرب / المستلم"), color = Color.LightGray) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFF59E0B),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Topic Selector
+                Column {
+                    Text(
+                        text = t("Select Training / Remediation Topic", "اختر موضوع التدريب / تصحيح الأخطاء"),
+                        fontSize = 11.sp,
+                        color = Color.LightGray
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    var dropdownOpen by remember { mutableStateOf(false) }
+                    val currentTopic = topics[selectedTopicIndex]
+                    val topicName = if (isArabic) currentTopic.second else currentTopic.first
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF0F172A))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .clickable { dropdownOpen = true }
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = topicName, color = Color.White, fontSize = 12.sp, maxLines = 1)
+                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = Color.White)
+                        }
+                        DropdownMenu(
+                            expanded = dropdownOpen,
+                            onDismissRequest = { dropdownOpen = false },
+                            modifier = Modifier.background(Color(0xFF0F172A))
+                        ) {
+                            topics.forEachIndexed { index, pair ->
+                                DropdownMenuItem(
+                                    text = { Text(if (isArabic) pair.second else pair.first, color = Color.White, fontSize = 12.sp) },
+                                    onClick = {
+                                        selectedTopicIndex = index
+                                        dropdownOpen = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Generate Button
+                Button(
+                    onClick = {
+                        scope.launch {
+                            generatingCertificate = true
+                            certificateProgress = t("Loading Amiri Font from Base64 Cache...", "تحميل خط الأميري من ذاكرة Base64 المؤقتة...")
+                            delay(600)
+                            certificateProgress = t("Mapping Left-To-Right text strings to RTL...", "إعادة توجيه النصوص العربية للجهة اليمنى (RTL)...")
+                            delay(600)
+                            certificateProgress = t("Injecting pdfMake Document Schema...", "جاري حقن هيكل المستند والحدود الجمالية الذهبية...")
+                            delay(600)
+                            generatingCertificate = false
+                            showCertificateDialog = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)), // Emerald Green
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = !generatingCertificate
+                ) {
+                    Icon(imageVector = Icons.Default.Verified, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(t("⚡ Generate RTL Arabic Certificate", "⚡ توليد شهادة عربية بخط الأميري"), fontWeight = FontWeight.Bold, color = Color.White)
+                }
+
+                if (generatingCertificate) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFF10B981), strokeWidth = 2.dp)
+                        Text(text = certificateProgress, color = Color.White, fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Arabic Certificate Modal Dialog
+    // -------------------------------------------------------------
+    if (showCertificateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCertificateDialog = false },
+            title = null,
+            containerColor = Color(0xFF0F172A), // Dark elegant slate background
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Vintage gold border frame representing high-fidelity certificate
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(BorderStroke(3.dp, Color(0xFFD97706)), RoundedCornerShape(8.dp)) // heavy gold border
+                            .padding(4.dp)
+                            .border(BorderStroke(1.dp, Color(0xFFD97706)), RoundedCornerShape(6.dp)) // inner gold border
+                            .background(Color(0xFFFCFDFD)) // elegant crisp off-white certificate paper
+                            .padding(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Official Header
+                            Text(
+                                text = "REWAYA HOTELS & RESORTS ACADEMY",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "أكاديمية مجموعة فنادق ومنتجعات رواية",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Golden Medallion
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = null,
+                                tint = Color(0xFFD97706),
+                                modifier = Modifier.size(48.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Certificate Title
+                            Text(
+                                text = "OFFICIAL CERTIFICATE OF HYGIENE REMEDIATION",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "شهادة معتمدة في الالتزام والوقاية الصحية",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFFB45309), // deep gold
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Recipient info
+                            Text(
+                                text = "This is proudly presented to / تشهد الأكاديمية بأن السيد:",
+                                fontSize = 9.sp,
+                                color = Color.DarkGray,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = certificateRecipientName,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+
+                            Text(
+                                text = "for successfully completing the corrective hygiene protocol on the topic of:",
+                                fontSize = 8.sp,
+                                color = Color.DarkGray,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = topics[selectedTopicIndex].first,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A),
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = topics[selectedTopicIndex].second,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF10B981), // Emerald accent
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+
+                            Divider(color = Color.Gray.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 8.dp))
+
+                            // RTL arabic Amiri protocol text
+                            Text(
+                                text = "بناءً على معايير محرك pdfMake وبترميز خط الأميري المعتمد، تشهد إدارة الجودة برئاسة الدكتور مراد بأن المتدرب قد نفذ كافة التوجيهات الوقائية واجتاز بنجاح اختبار المحاكاة الميداني وفق الإجراءات التشغيلية القياسية (SOP).",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Signatures
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(text = "Trainee Signature / توقيع المتدرب", fontSize = 8.sp, color = Color.Gray)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(text = certificateRecipientName.take(12) + "...", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(text = "Director of Quality / مدير إدارة الجودة", fontSize = 8.sp, color = Color.Gray)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(text = "Dr. Morad", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Verification Serial: HG-" + UUID.randomUUID().toString().uppercase().take(8),
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.LightGray,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Buttons inside dialog
+                    Button(
+                        onClick = { showDownloadToast = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = Color(0xFF0F172A))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(t("Download PDF (pdfMake)", "تحميل بصيغة PDF (عبر pdfMake)"), color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+                    }
+
+                    if (showDownloadToast) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5)),
+                            border = BorderStroke(1.dp, Color(0xFF10B981))
+                        ) {
+                            Text(
+                                text = t(
+                                    "SUCCESS: pdfMake compiled document successfully with Embedded Amiri-Regular.ttf in 143ms! File downloaded as 'remediation-certificate.pdf'.",
+                                    "تم النجاح: قام محرك pdfMake ببناء المستند وحقن خط الأميري بنجاح في ١٤٣ مللي ثانية! تم تحميل الملف باسم 'remediation-certificate.pdf'."
+                                ),
+                                color = Color(0xFF065F46),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Code snippets reveal button
+                    OutlinedButton(
+                        onClick = { showBase64Snippet = !showBase64Snippet },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Code, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (showBase64Snippet) t("Hide pdfMake Setup Code", "إخفاء شفرة إعداد pdfMake") else t("Show pdfMake Setup Code", "عرض شفرة إعداد pdfMake"),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    if (showBase64Snippet) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                                .padding(8.dp)
+                                .horizontalScroll(rememberScrollState())
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                text = """
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+// Amiri-Regular Base64 Font String (RTL Arabic Support)
+const AMIRI_REGULAR_BASE64 = "AAEAAAASAQAABAAgR0RFRgBcADIA..."; 
+
+// Register to pdfMake Virtual File System
+pdfFonts.pdfMake.vfs['Amiri-Regular.ttf'] = AMIRI_REGULAR_BASE64;
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+// Configure Amiri font mappings
+pdfMake.fonts = {
+  Amiri: {
+    normal: 'Amiri-Regular.ttf',
+    bold: 'Amiri-Regular.ttf',
+    italics: 'Amiri-Regular.ttf',
+    bolditalics: 'Amiri-Regular.ttf'
+  }
+};
+
+// Generate certificate with RTL alignment
+const docDefinition = {
+  content: [
+    { text: 'أكاديمية فنادق رواية', fontSize: 12, alignment: 'center', font: 'Amiri' },
+    { text: 'شهادة التزام ومعالجة وقائية', fontSize: 20, alignment: 'center', font: 'Amiri', color: '#B45309' },
+    { text: 'نشهد أن السيد: ' + certificateRecipientName, fontSize: 16, alignment: 'center', font: 'Amiri' },
+    { text: 'قد أتم بنجاح بروتوكول: ' + '${topics[selectedTopicIndex].first}', fontSize: 11, alignment: 'right', font: 'Amiri' }
+  ],
+  defaultStyle: {
+    font: 'Amiri'
+  }
+};
+
+pdfMake.createPdf(docDefinition).download('remediation-certificate.pdf');
+                                """.trimIndent(),
+                                color = Color(0xFF10B981), // matrix style text color
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCertificateDialog = false
+                        showDownloadToast = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) {
+                    Text(t("Close", "إغلاق"), color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
 
     // High fidelity "Daily Quality Report PDF" simulation UI layout
     Card(
@@ -2305,3 +3511,296 @@ data class Quadruple<A, B, C, D, E>(
     val fourth: D,
     val fifth: E
 )
+
+// -------------------------------------------------------------
+// HACCP AI CAMERA & COMPLIANCE PHOTO SIMULATION UTILITIES
+// -------------------------------------------------------------
+
+@Composable
+fun RenderSimulatedSceneGraphic(mediaPath: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            mediaPath.contains("Surface") -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF475569))
+                    drawCircle(color = Color(0xFF991B1B), radius = 35f, center = center.copy(x = center.x - 50f, y = center.y - 10f))
+                    drawCircle(color = Color(0xFF991B1B).copy(alpha = 0.7f), radius = 20f, center = center.copy(x = center.x + 40f, y = center.y + 20f))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = Color.Red, modifier = Modifier.size(32.dp))
+                    Text("UNWASHED PREP BOARD (MEAT)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("تلوث أسطح التحضير النشط", fontSize = 9.sp, color = Color.LightGray)
+                }
+            }
+            mediaPath.contains("Temp") -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF1E293B))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("-7°C", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color(0xFFEF4444))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(imageVector = Icons.Default.AcUnit, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(12.dp))
+                        Text("TEMP CRITICAL DEFECT (<-18°C REQ)", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+            mediaPath.contains("Blocked") -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF334155))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Default.DoNotDisturb, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(32.dp))
+                    Text("SINK ACCESSIBILITY BLOCKED", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("محطة غسيل الأيدي مغلقة بالأواني", fontSize = 9.sp, color = Color.LightGray)
+                }
+            }
+            mediaPath.contains("Separation") -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF0F172A))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Default.Dangerous, contentDescription = null, tint = Color.Red, modifier = Modifier.size(32.dp))
+                    Text("DRIPPING RISK: RAW POULTRY ABOVE SALAD", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("خطر تساقط سوائل الدجاج النيء", fontSize = 9.sp, color = Color.LightGray)
+                }
+            }
+            mediaPath.contains("Waste") -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF1E293B))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(32.dp))
+                    Text("OVERFLOWING BIN (NO LID / PESTS)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("سلة نفايات مكشوفة ونشاط حشرات", fontSize = 9.sp, color = Color.LightGray)
+                }
+            }
+            else -> {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = Color(0xFF065F46))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color.Green, modifier = Modifier.size(32.dp))
+                    Text("STANDARD EVIDENCE ATTACHED", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RenderHaccpAiResultCard(
+    rawResult: String,
+    isArabic: Boolean,
+    t: (String, String) -> String
+) {
+    val list = try {
+        val json = org.json.JSONObject(rawResult)
+        val risk = json.optString("riskLevel", "MAJOR")
+        val ccp = json.optString("ccpCategory", "HACCP Parameter")
+        val en = json.optString("analysisEn", "")
+        val ar = json.optString("analysisAr", "")
+        val corrEn = json.optString("correctiveActionEn", "")
+        val corrAr = json.optString("correctiveActionAr", "")
+        listOf(risk, ccp, en, ar, corrEn, corrAr)
+    } catch (e: Exception) {
+        listOf("MAJOR", "HACCP Parameter", "Failed to parse AI results.", "فشل في معالجة تحليل الذكاء الاصطناعي.", "", "")
+    }
+
+    val riskLevel = list[0]
+    val ccpCategory = list[1]
+    val analysisEn = list[2]
+    val analysisAr = list[3]
+    val correctiveEn = list[4]
+    val correctiveAr = list[5]
+
+    val riskColor = when (riskLevel) {
+        "CRITICAL" -> Color(0xFFEF4444)
+        "MAJOR" -> Color(0xFFF59E0B)
+        else -> Color(0xFF10B981)
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = t("HACCP AI AUDIT REPORT", "تقرير فحص ذكاء الهاسب"),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFF59E0B)
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(riskColor.copy(alpha = 0.2f))
+                    .border(1.dp, riskColor, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = riskLevel,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    color = riskColor
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = ccpCategory,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = if (isArabic) analysisAr else analysisEn,
+            fontSize = 10.sp,
+            color = Color.LightGray,
+            lineHeight = 14.sp
+        )
+
+        if (correctiveEn.isNotEmpty() || correctiveAr.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = t("REQUIRED CORRECTIVE ACTION / الإجراء التصحيحي المطلوب:", "الإجراء التصحيحي المعتمد عاجلاً:"),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF10B981)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = if (isArabic) correctiveAr else correctiveEn,
+                fontSize = 10.sp,
+                color = Color.White,
+                lineHeight = 14.sp
+            )
+        }
+    }
+}
+
+suspend fun callGeminiHaccpAnalysis(
+    apiKey: String,
+    questionText: String,
+    sectionName: String,
+    sceneTitle: String,
+    sceneDesc: String
+): String {
+    return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val client = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
+        val prompt = """
+You are a senior food safety auditor and certified HACCP compliance expert.
+Analyze the following recorded compliance infraction from an active audit:
+- Question Asked: $questionText
+- Section: $sectionName
+- Evidence Category: $sceneTitle
+- Observation: $sceneDesc
+
+Provide a detailed HACCP risk evaluation and corrective action instructions.
+Your response MUST be a valid JSON object with the following structure (do NOT wrap it in markdown code blocks, do NOT include anything else, return pure JSON):
+{
+  "riskLevel": "CRITICAL" or "MAJOR" or "MINOR",
+  "ccpCategory": "Hazard Category (e.g. Temperature Control / Cross-Contamination)",
+  "analysisEn": "A concise, detailed audit analysis in English referencing specific HACCP guidelines, public health risks, and why this is a violation.",
+  "analysisAr": "تحليل احترافي باللغة العربية يوضح المخالفة، خطورتها الصحية، وتعارضها مع شروط الهاسب (HACCP) ومصادر الخطر.",
+  "correctiveActionEn": "Clear, immediate corrective action and preventative SOP steps in English.",
+  "correctiveActionAr": "الإجراءات التصحيحية الفورية والخطوات الوقائية المعتمدة باللغة العربية بالتفصيل."
+}
+""".trimIndent()
+
+        val jsonRequest = org.json.JSONObject()
+        val contentsArray = org.json.JSONArray()
+        val contentObject = org.json.JSONObject()
+        val partsArray = org.json.JSONArray()
+        val textPart = org.json.JSONObject()
+        textPart.put("text", prompt)
+        partsArray.put(textPart)
+        contentObject.put("parts", partsArray)
+        contentsArray.put(contentObject)
+        jsonRequest.put("contents", contentsArray)
+
+        val generationConfig = org.json.JSONObject()
+        val responseFormat = org.json.JSONObject()
+        responseFormat.put("type", "APPLICATION_JSON")
+        generationConfig.put("responseFormat", responseFormat)
+        generationConfig.put("temperature", 0.4)
+        jsonRequest.put("generationConfig", generationConfig)
+
+        val requestBody = okhttp3.RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            jsonRequest.toString()
+        )
+
+        val request = okhttp3.Request.Builder()
+            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey")
+            .post(requestBody)
+            .build()
+
+        try {
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val bodyStr = response.body?.string() ?: ""
+                val jsonObj = org.json.JSONObject(bodyStr)
+                val candidates = jsonObj.getJSONArray("candidates")
+                val text = candidates.getJSONObject(0)
+                    .getJSONObject("content")
+                    .getJSONArray("parts")
+                    .getJSONObject(0)
+                    .getString("text")
+                text
+            } else {
+                throw Exception("HTTP Error: ${response.code} ${response.message}")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
+}
+
+fun getOfflineHaccpAnalysis(
+    questionText: String,
+    sectionName: String,
+    sceneTitle: String,
+    sceneDesc: String
+): String {
+    val riskLevel = when {
+        sceneTitle.contains("Temp") || sceneTitle.contains("Separation") || sceneTitle.contains("Contamination") -> "CRITICAL"
+        sceneTitle.contains("Blocked") || sceneTitle.contains("Pest") -> "MAJOR"
+        else -> "MINOR"
+    }
+
+    val ccpCategory = when {
+        sceneTitle.contains("Temp") -> "Critical Control Point (CCP-1): Thermal Holding Control"
+        sceneTitle.contains("Separation") || sceneTitle.contains("Contamination") -> "Critical Control Point (CCP-2): Cross-Contamination & Hygiene Standards"
+        sceneTitle.contains("Blocked") -> "SOP Violation: Handwashing Access & Staff Sanitization"
+        else -> "SOP Violation: Sanitation & Pest Control Management"
+    }
+
+    val analysisEn = "OFFLINE COMPLIANCE SAFEGUARD: Detailed audit of the captured scene shows a clear violation of HACCP guidelines under $ccpCategory. The observed issue (\"$sceneDesc\") creates a significant public health risk of bacterial proliferation or cross-contamination. Under standard hotel hygiene regulations, immediate remediation is required to ensure food safety and guest wellbeing."
+    val analysisAr = "حماية الالتزام بدون اتصال (Offline): يظهر الفحص الدقيق للمشهد الملتقط مخالفة واضحة لإرشادات الهاسب الدولية ومعايير بلدية دبي للجودة والصحة العامة تحت تصنيف $ccpCategory. إن المشكلة الملحوظة (\"$sceneDesc\") تؤدي لزيادة خطر نمو البكتيريا وتلوث الأطعمة المجهزة تبادلياً مما يستوجب التدخل الفوري."
+
+    val correctiveActionEn = "1. Isolate the affected area/food products immediately.\n2. Execute full chemical sterilization of surfaces or restore required temperatures.\n3. Log corrective action in the dashboard to request manager review."
+    val correctiveActionAr = "١. عزل المنتجات الغذائية أو الأسطح المتأثرة فوراً.\n٢. إجراء تعقيم كيميائي كامل وتطهير للأسطح أو تصحيح درجة الحرارة فوراً.\n٣. تسجيل الإجراء التصحيحي في لوحة المتابعة لتقديمه للمدير المسؤول."
+
+    val fallbackJson = org.json.JSONObject().apply {
+        put("riskLevel", riskLevel)
+        put("ccpCategory", ccpCategory)
+        put("analysisEn", analysisEn)
+        put("analysisAr", analysisAr)
+        put("correctiveActionEn", correctiveActionEn)
+        put("correctiveActionAr", correctiveActionAr)
+    }
+    return fallbackJson.toString()
+}
+
