@@ -820,226 +820,726 @@ fun DashboardTabView(
     val totalOpenCount = filteredActions.count { it.status == "OPEN" }
     val completedCount = filteredAudits.size
 
-    // KPI Display panels
+    var activeDashboardView by remember { mutableStateOf("overview") } // "overview" vs "tasks"
+
+    // Responsive Segmented View Toggle Control
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFE2E8F0))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        val containerModifier = Modifier
+        val tabModifier = Modifier
             .weight(1f)
-            .height(110.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { activeDashboardView = "overview" }
+            .background(if (activeDashboardView == "overview") Color(0xFF0F172A) else Color.Transparent)
+            .padding(vertical = 10.dp)
         
-        KpiWidget(
-            title = t("Avg Compliance", "متوسط الامتثال"),
-            valStr = "%.1f%%".format(overallCompliance),
-            subtext = "Objective: 95%+",
-            color = if (overallCompliance >= 93) Color(0xFF10B981) else Color(0xFFEF4444),
-            icon = Icons.Default.CheckCircle,
-            modifier = containerModifier
-        )
-        KpiWidget(
-            title = t("Pending Actions", "إجراءات معلقة"),
-            valStr = "$totalOpenCount",
-            subtext = t("$openUrgentCount URGENT ITEMS", "$openUrgentCount بنود عاجلة"),
-            color = if (totalOpenCount > 0) Color(0xFFF59E0B) else Color(0xFF10B981),
-            icon = Icons.Default.Warning,
-            modifier = containerModifier
-        )
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        val containerModifier = Modifier
+        val tabTasksModifier = Modifier
             .weight(1f)
-            .height(110.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { activeDashboardView = "tasks" }
+            .background(if (activeDashboardView == "tasks") Color(0xFF0F172A) else Color.Transparent)
+            .padding(vertical = 10.dp)
 
-        KpiWidget(
-            title = t("Audits Logged", "الفحوصات المسجلة"),
-            valStr = "$completedCount",
-            subtext = t("Real-time tracked", "تتبع في الوقت الفعلي"),
-            color = Color(0xFF3B82F6),
-            icon = Icons.Default.Assignment,
-            modifier = containerModifier
-        )
+        Row(
+            modifier = tabModifier,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Dashboard,
+                contentDescription = null,
+                tint = if (activeDashboardView == "overview") Color(0xFFF59E0B) else Color.DarkGray,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = t("Audit Scores", "نتائج التدقيق"),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (activeDashboardView == "overview") Color.White else Color.DarkGray
+            )
+        }
 
-        KpiWidget(
-            title = t("Health Index", "مؤشر السلامة"),
-            valStr = if (overallCompliance >= 90) "A+" else "B",
-            subtext = t("Excellent Status", "حالة ممتازة"),
-            color = Color(0xFF8B5CF6),
-            icon = Icons.Default.Beenhere,
-            modifier = containerModifier
-        )
+        Row(
+            modifier = tabTasksModifier,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Assignment,
+                contentDescription = null,
+                tint = if (activeDashboardView == "tasks") Color(0xFFF59E0B) else Color.DarkGray,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = t("Pending Tasks", "المهام المعلقة"),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (activeDashboardView == "tasks") Color.White else Color.DarkGray
+            )
+        }
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    if (activeDashboardView == "overview") {
+        // KPI Display panels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val containerModifier = Modifier
+                .weight(1f)
+                .height(110.dp)
+            
+            KpiWidget(
+                title = t("Avg Compliance", "متوسط الامتثال"),
+                valStr = "%.1f%%".format(overallCompliance),
+                subtext = "Objective: 95%+",
+                color = if (overallCompliance >= 93) Color(0xFF10B981) else Color(0xFFEF4444),
+                icon = Icons.Default.CheckCircle,
+                modifier = containerModifier
+            )
+            KpiWidget(
+                title = t("Pending Actions", "إجراءات معلقة"),
+                valStr = "$totalOpenCount",
+                subtext = t("$openUrgentCount URGENT ITEMS", "$openUrgentCount بنود عاجلة"),
+                color = if (totalOpenCount > 0) Color(0xFFF59E0B) else Color(0xFF10B981),
+                icon = Icons.Default.Warning,
+                modifier = containerModifier
+            )
+        }
 
-    // Zone & Department compliance breakdown graph simulation
-    Text(
-        text = t("Departmental Performance Comparison", "مقارنة أداء الأقسام"),
-        fontWeight = FontWeight.Bold,
-        fontSize = 15.sp,
-        color = Color.Black,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
+        Spacer(modifier = Modifier.height(8.dp))
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            listOf(
-                Triple(t("Food & Beverage", "الأغذية والمشروبات"), 91.6f, Color(0xFF10B981)),
-                Triple(t("Housekeeping", "الإشراف الداخلي"), 95.0f, Color(0xFF3B82F6)),
-                Triple(t("Back of House", "الخدمات المساندة"), 83.2f, Color(0xFFF59E0B)),
-                Triple(t("Public Areas", "المناطق العامة"), 96.0f, Color(0xFF8B5CF6))
-            ).forEach { (dept, score, color) ->
-                Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = dept, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        Text(text = "%.1f%%".format(score), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFFE2E8F0))
-                    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val containerModifier = Modifier
+                .weight(1f)
+                .height(110.dp)
+
+            KpiWidget(
+                title = t("Audits Logged", "الفحوصات المسجلة"),
+                valStr = "$completedCount",
+                subtext = t("Real-time tracked", "تتبع في الوقت الفعلي"),
+                color = Color(0xFF3B82F6),
+                icon = Icons.Default.Assignment,
+                modifier = containerModifier
+            )
+
+            KpiWidget(
+                title = t("Health Index", "مؤشر السلامة"),
+                valStr = if (overallCompliance >= 90) "A+" else "B",
+                subtext = t("Excellent Status", "حالة ممتازة"),
+                color = Color(0xFF8B5CF6),
+                icon = Icons.Default.Beenhere,
+                modifier = containerModifier
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Zone & Department compliance breakdown graph simulation
+        Text(
+            text = t("Departmental Performance Comparison", "مقارنة أداء الأقسام"),
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                listOf(
+                    Triple(t("Food & Beverage", "الأغذية والمشروبات"), 91.6f, Color(0xFF10B981)),
+                    Triple(t("Housekeeping", "الإشراف الداخلي"), 95.0f, Color(0xFF3B82F6)),
+                    Triple(t("Back of House", "الخدمات المساندة"), 83.2f, Color(0xFFF59E0B)),
+                    Triple(t("Public Areas", "المناطق العامة"), 96.0f, Color(0xFF8B5CF6))
+                ).forEach { (dept, score, color) ->
+                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = dept, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "%.1f%%".format(score), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Box(
                             modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(score / 100f)
+                                .fillMaxWidth()
+                                .height(10.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(color)
-                        )
+                                .background(Color(0xFFE2E8F0))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(score / 100f)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(color)
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-    // Real-time Recent Audits Stream List
-    Text(
-        text = t("Recent Quality Audits Map / Trace", "سجل عمليات فحص الجودة المباشر"),
-        fontWeight = FontWeight.Bold,
-        fontSize = 15.sp,
-        color = Color.Black,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
+        // Real-time Recent Audits Stream List
+        Text(
+            text = t("Recent Quality Audits Map / Trace", "سجل عمليات فحص الجودة المباشر"),
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-    if (filteredAudits.isEmpty()) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Description,
-                    contentDescription = null,
-                    tint = Color.LightGray,
-                    modifier = Modifier.size(54.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = t("No inspections recorded yet.", "لا توجد عمليات فحص مسجلة بعد."),
-                    color = Color.Gray,
-                    fontSize = 13.sp
-                )
-            }
-        }
-    } else {
-        filteredAudits.take(5).forEach { audit ->
-            val hot = hotels.firstOrNull { it.id == audit.hotelId }
-            val hotelName = if (isArabic) hot?.nameAr ?: "" else hot?.nameEn ?: ""
-            val scoreColor = when {
-                audit.complianceScore >= 95 -> Color(0xFF10B981)
-                audit.complianceScore >= 85 -> Color(0xFF3B82F6)
-                else -> Color(0xFFEF4444)
-            }
-
+        if (filteredAudits.isEmpty()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(54.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = t("No inspections recorded yet.", "لا توجد عمليات فحص مسجلة بعد."),
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+        } else {
+            filteredAudits.take(5).forEach { audit ->
+                val hot = hotels.firstOrNull { it.id == audit.hotelId }
+                val hotelName = if (isArabic) hot?.nameAr ?: "" else hot?.nameEn ?: ""
+                val scoreColor = when {
+                    audit.complianceScore >= 95 -> Color(0xFF10B981)
+                    audit.complianceScore >= 85 -> Color(0xFF3B82F6)
+                    else -> Color(0xFFEF4444)
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(scoreColor.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Assignment,
+                                    contentDescription = null,
+                                    tint = scoreColor,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = hotelName,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${t("Dept:", "قسم:")} ${audit.departmentName} - ${t("by", "بواسطة")} ${audit.inspectorName}",
+                                    fontSize = 11.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(scoreColor.copy(alpha = 0.15f)),
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(scoreColor.copy(alpha = 0.12f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Assignment,
-                                contentDescription = null,
-                                tint = scoreColor,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Column {
                             Text(
-                                text = hotelName,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = Color.Black
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${t("Dept:", "قسم:")} ${audit.departmentName} - ${t("by", "بواسطة")} ${audit.inspectorName}",
-                                fontSize = 11.sp,
-                                color = Color.Gray
+                                text = "%.1f %%".format(audit.complianceScore),
+                                color = scoreColor,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp
                             )
                         }
                     }
+                }
+            }
+        }
+    } else {
+        // --- PENDING OPERATIONAL TASKS & CORRECTIVE ACTIONS VIEW ---
+        var selectedPriorityFilter by remember { mutableStateOf("ALL") }
+        var selectedStatusFilter by remember { mutableStateOf("OPEN") }
+        var resolvingActionId by remember { mutableStateOf<String?>(null) }
+        var resolutionNotes by remember { mutableStateOf("") }
+
+        val totalActions = filteredActions.size
+        val openActionsCount = filteredActions.count { it.status == "OPEN" }
+        val resolvedActionsCount = filteredActions.count { it.status == "RESOLVED" }
+        val resolutionRate = if (totalActions > 0) (resolvedActionsCount.toFloat() / totalActions * 100) else 100f
+
+        // Task Progress Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = t("OPERATIONAL RESOLUTION RATE", "معدل حل المشكلات التشغيلية"),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "%.1f%%".format(resolutionRate),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(scoreColor.copy(alpha = 0.12f))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF10B981).copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { resolutionRate / 100f },
+                            color = Color(0xFF10B981),
+                            strokeWidth = 4.dp,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                Divider(color = Color.Gray.copy(alpha = 0.1f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(t("Pending Tasks", "مهام معلقة"), fontSize = 11.sp, color = Color.Gray)
+                        Text("$openActionsCount", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                    }
+                    Column {
+                        Text(t("Resolved Tasks", "مهام منتهية"), fontSize = 11.sp, color = Color.Gray)
+                        Text("$resolvedActionsCount", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
+                    }
+                    Column {
+                        Text(t("Total Operational Actions", "إجمالي الإجراءات"), fontSize = 11.sp, color = Color.Gray)
+                        Text("$totalActions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3B82F6))
+                    }
+                }
+            }
+        }
+
+        // Filters UI row
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            Text(
+                text = t("Filter Tasks by Priority", "تصفية المهام حسب الأولوية"),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val priorities = listOf(
+                    "ALL" to t("All Tasks", "الكل"),
+                    "URGENT" to t("Urgent", "عاجل"),
+                    "IMPORTANT" to t("Important", "هام"),
+                    "ROUTINE" to t("Routine", "روتيني")
+                )
+                priorities.forEach { (key, label) ->
+                    val isSelected = selectedPriorityFilter == key
+                    val pColor = when (key) {
+                        "URGENT" -> Color(0xFFEF4444)
+                        "IMPORTANT" -> Color(0xFFF59E0B)
+                        "ROUTINE" -> Color(0xFF3B82F6)
+                        else -> Color(0xFF0F172A)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) pColor else Color.White)
+                            .border(1.dp, if (isSelected) pColor else Color.LightGray, RoundedCornerShape(8.dp))
+                            .clickable { selectedPriorityFilter = key }
+                            .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "%.1f %%".format(audit.complianceScore),
-                            color = scoreColor,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 13.sp
+                            text = label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.White else Color.DarkGray
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = t("Filter Tasks by Status", "تصفية المهام حسب الحالة"),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val statuses = listOf(
+                    "OPEN" to t("Open / Pending", "قيد الانتظار"),
+                    "RESOLVED" to t("Resolved / Closed", "تم الحل")
+                )
+                statuses.forEach { (key, label) ->
+                    val isSelected = selectedStatusFilter == key
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) Color(0xFF0F172A) else Color.White)
+                            .border(1.dp, if (isSelected) Color(0xFF0F172A) else Color.LightGray, RoundedCornerShape(8.dp))
+                            .clickable { selectedStatusFilter = key }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.White else Color.DarkGray
+                        )
+                    }
+                }
+            }
+        }
+
+        // Map and Filter items
+        val listItems = filteredActions.filter {
+            (selectedPriorityFilter == "ALL" || it.priority == selectedPriorityFilter) &&
+            (it.status == selectedStatusFilter)
+        }
+
+        if (listItems.isEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(54.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = t("All tasks resolved! Great work.", "رائع! تم إنجاز وحل جميع المهام بنجاح."),
+                        color = Color.Gray,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        } else {
+            listItems.forEach { action ->
+                val hot = hotels.firstOrNull { it.id == action.hotelId }
+                val hotelName = if (isArabic) hot?.nameAr ?: "" else hot?.nameEn ?: ""
+                
+                val priorityColor = when (action.priority) {
+                    "URGENT" -> Color(0xFFEF4444)
+                    "IMPORTANT" -> Color(0xFFF59E0B)
+                    else -> Color(0xFF64748B)
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .border(BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)), RoundedCornerShape(12.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(6.dp)
+                                .fillMaxHeight()
+                                .background(priorityColor)
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(priorityColor.copy(alpha = 0.1f))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = when (action.priority) {
+                                            "URGENT" -> t("URGENT", "عاجل جداً")
+                                            "IMPORTANT" -> t("IMPORTANT", "هام")
+                                            else -> t("ROUTINE", "روتيني")
+                                        },
+                                        color = priorityColor,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                                Text(
+                                    text = hotelName,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Gray
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = action.issueDescription,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "${t("Dept:", "القسم:")} ${action.departmentName}",
+                                        fontSize = 11.sp,
+                                        color = Color.DarkGray
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.US)
+                                    Text(
+                                        text = "${t("Due Date:", "تاريخ الاستحقاق:")} ${sdf.format(Date(action.dueDate))}",
+                                        fontSize = 11.sp,
+                                        color = if (action.priority == "URGENT" && action.status == "OPEN") Color(0xFFEF4444) else Color.DarkGray,
+                                        fontWeight = if (action.priority == "URGENT" && action.status == "OPEN") FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+
+                                if (action.status == "OPEN") {
+                                    Button(
+                                        onClick = {
+                                            resolvingActionId = action.id
+                                            resolutionNotes = ""
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = t("Mark Resolved", "حل المهمة"),
+                                            color = Color.White,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0xFF10B981).copy(alpha = 0.1f))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = t("✓ Resolved", "✓ تم حلها"),
+                                            color = Color(0xFF10B981),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (action.status == "RESOLVED" && action.reInspectionNotes != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC))
+                                ) {
+                                    Column(modifier = Modifier.padding(8.dp)) {
+                                        Text(
+                                            text = t("Resolution Notes:", "تفاصيل الحل والامتثال:"),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Gray
+                                        )
+                                        Text(
+                                            text = action.reInspectionNotes,
+                                            fontSize = 11.sp,
+                                            color = Color.DarkGray
+                                        )
+                                        if (action.resolvedAt != null) {
+                                            val sdf = SimpleDateFormat("dd MMM yyyy HH:mm", Locale.US)
+                                            Text(
+                                                text = "${t("Resolved at:", "تاريخ الحل:")} ${sdf.format(Date(action.resolvedAt))}",
+                                                fontSize = 9.sp,
+                                                color = Color.Gray,
+                                                modifier = Modifier.padding(top = 4.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Resolve Action Dialog
+        if (resolvingActionId != null) {
+            val actionId = resolvingActionId!!
+            AlertDialog(
+                onDismissRequest = { resolvingActionId = null },
+                title = {
+                    Text(
+                        text = t("Resolve Corrective Action", "تسجيل حل الإجراء التصحيحي"),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                },
+                containerColor = Color(0xFF1E293B),
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = t("Please describe what steps were taken to fix the issue and restore full compliance:", "الرجاء وصف الإجراءات والخطوات التي تم اتخاذها لحل المشكلة واستعادة الامتثال الكامل:"),
+                            fontSize = 12.sp,
+                            color = Color.LightGray
+                        )
+                        OutlinedTextField(
+                            value = resolutionNotes,
+                            onValueChange = { resolutionNotes = it },
+                            placeholder = { Text(t("e.g. Re-calibrated refrigerator to -18C, checked door seal.", "مثال: تمت إعادة ضبط المبرد إلى -١٨ مئوية واختبار عزل الباب.")) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFF59E0B),
+                                unfocusedBorderColor = Color.Gray,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.resolveCorrectiveAction(actionId, if (resolutionNotes.isNotBlank()) resolutionNotes else "Resolved successfully")
+                            resolvingActionId = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B))
+                    ) {
+                        Text(t("Confirm & Resolve", "تأكيد وإغلاق البند"), color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { resolvingActionId = null }) {
+                        Text(t("Cancel", "إلغاء"), color = Color.White)
+                    }
+                }
+            )
         }
     }
 }
